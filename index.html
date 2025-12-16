@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IdealMe Solutions – RESET</title>
+
+  <style>
+    :root{
+      --bg0:#140a2a;
+      --bg1:#1b1440;
+      --surface:rgba(120,120,255,.12);
+      --line:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.72);
+      --subtle:rgba(255,255,255,.55);
+
+      --blue:#4f8cff;
+      --purple:#7b5cff;
+      --orange:#ff8a3d;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(123,92,255,.25), transparent 60%),
+        radial-gradient(900px 600px at 80% 20%, rgba(79,140,255,.25), transparent 60%),
+        linear-gradient(180deg,var(--bg0),var(--bg1));
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .app{max-width:720px;width:100%}
+    h1{font-size:32px;margin:16px 0 6px}
+    h2{font-size:20px;margin:0 0 12px}
+    p{line-height:1.5;color:var(--muted)}
+
+    .card{
+      background:linear-gradient(180deg,var(--surface),rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-top:14px;
+    }
+
+    button{
+      border-radius:14px;
+      border:1px solid transparent;
+      padding:12px 14px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .primary{
+      background:var(--orange);
+      color:#1a0f10;
+    }
+
+    .secondary{
+      background:rgba(79,140,255,.15);
+      color:var(--text);
+      border-color:rgba(79,140,255,.4);
+    }
+
+    .text{
+      background:none;
+      color:var(--muted);
+      border:none;
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .space{height:14px}
+
+    .seg button{
+      flex:1;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+
+    .seg button.active{
+      border-color:var(--orange);
+      box-shadow:0 0 0 3px rgba(255,138,61,.15);
+    }
+
+    textarea{
+      width:100%;
+      min-height:90px;
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+    }
+
+    .breath{
+      height:140px;
+      display:grid;
+      place-items:center;
+    }
+
+    .orb{
+      width:70px;height:70px;border-radius:50%;
+      background:linear-gradient(135deg,var(--blue),var(--purple));
+      transition:transform 1s ease;
+    }
+
+    .inhale{transform:scale(1.5)}
+    .exhale{transform:scale(1.05)}
+
+    .footer{
+      margin-top:16px;
+      font-size:12px;
+      color:var(--subtle);
+    }
+  </style>
+</head>
+
+<body>
+<div class="app" id="app"></div>
+
+<script>
+let screen = "start";
+let activation = null;
+let impact = null;
+let phase = "inhale";
+let seconds = 4;
+let cycles = 0;
+let timer = null;
+
+const app = document.getElementById("app");
+
+function render(){
+  app.innerHTML = "";
+
+  if(screen==="start"){
+    app.innerHTML = `
+      <h1>RESET</h1>
+      <p>Regain control. Restore clarity. Protect performance.</p>
+
+      <div class="card">
+        <p>Use this before responding, deciding, or acting under pressure.
+        This tool does not store data.</p>
+      </div>
+
+      <div class="space"></div>
+      <button class="primary" onclick="next('activation')">Start Reset</button>
+      <div class="footer">Privacy by default. Nothing is recorded.</div>
+    `;
+  }
+
+  if(screen==="activation"){
+    app.innerHTML = `
+      <h2>Check your current state</h2>
+      <p>Performance drops when activation is too high.</p>
+
+      <div class="card seg row">
+        ${["Low","Moderate","High","Overloaded"].map(l=>`
+          <button class="${activation===l?'active':''}"
+            onclick="activation='${l}';render()">${l}</button>`).join("")}
+      </div>
+
+      <div class="space"></div>
+      <button class="primary" onclick="next('breathing')" ${!activation?"disabled":""}>Continue</button>
+      <button class="text" onclick="next('start')">Back</button>
+    `;
+  }
+
+  if(screen==="breathing"){
+    app.innerHTML = `
+      <h2>Breathing reset</h2>
+      <p>Follow the guide for three cycles.</p>
+
+      <div class="card breath">
+        <div class="orb ${phase}"></div>
+      </div>
+
+      <div class="space"></div>
+      <p>${phase==="inhale"?"Inhale":"Exhale"} • ${seconds}s</p>
+    `;
+  }
+
+  if(screen==="check"){
+    app.innerHTML = `
+      <h2>Check in</h2>
+      <p>Did intensity shift?</p>
+
+      <div class="card seg row">
+        ${["Yes","A little","No"].map(i=>`
+          <button class="${impact===i?'active':''}"
+            onclick="impact='${i}';render()">${i}</button>`).join("")}
+      </div>
+
+      <div class="space"></div>
+      <button class="primary" onclick="next('end')" ${!impact?"disabled":""}>Continue</button>
+    `;
+  }
+
+  if(screen==="end"){
+    const msg = impact==="Yes"
+      ? "Your system responded. Proceed with more clarity."
+      : impact==="A little"
+        ? "Even a small shift improves decision quality."
+        : "Try another reset or delay action if possible.";
+
+    app.innerHTML = `
+      <h2>Session complete</h2>
+      <p>${msg}</p>
+
+      <div class="space"></div>
+      <button class="primary" onclick="reset()">End session</button>
+    `;
+  }
+}
+
+function next(s){
+  screen=s;
+  if(s==="breathing") startBreathing();
+  render();
+}
+
+function reset(){
+  clearInterval(timer);
+  screen="start";
+  activation=null;
+  impact=null;
+  render();
+}
+
+function startBreathing(){
+  phase="inhale";seconds=4;cycles=0;
+  timer=setInterval(()=>{
+    seconds--;
+    if(seconds<=0){
+      if(phase==="inhale"){phase="exhale";seconds=4;}
+      else{
+        cycles++;
+        if(cycles>=3){
+          clearInterval(timer);
+          screen="check";
+          render();
+          return;
+        }
+        phase="inhale";seconds=4;
+      }
+    }
+    render();
+  },1000);
+}
+
+render();
+</script>
+</body>
+</html>
